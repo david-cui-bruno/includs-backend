@@ -8,6 +8,18 @@ import type { SummaryAPIResponse } from '../types/index';
 
 export const documentsRouter = Router();
 
+console.log('📋 Setting up documents router...');
+
+// Middleware to log all requests to documents API
+documentsRouter.use((req, res, next) => {
+  console.log(`📋 Documents API: ${req.method} ${req.path}`, {
+    body: req.body,
+    files: req.files || req.file ? 'FILE_PRESENT' : 'NO_FILES',
+    timestamp: new Date().toISOString()
+  });
+  next();
+});
+
 documentsRouter.post('/upload-and-summarize', uploadMiddleware, handleUploadError, async (req: any, res: any) => {
   try {
     if (!req.file) {
@@ -74,10 +86,20 @@ documentsRouter.post('/upload-and-summarize', uploadMiddleware, handleUploadErro
 });
 
 documentsRouter.post('/text-summarize', async (req, res) => {
+  console.log('📝 Text summarize endpoint hit!');
   try {
     const { text, maxWords = 1000, gradeLevel = 8 } = req.body;
     
+    console.log('📝 Request body received:', {
+      textLength: text?.length || 0,
+      maxWords,
+      gradeLevel,
+      hasText: !!text,
+      textType: typeof text
+    });
+    
     if (!text || typeof text !== 'string') {
+      console.log('❌ Invalid text provided');
       return res.status(400).json({ 
         success: false,
         error: 'No text provided or invalid text format' 
